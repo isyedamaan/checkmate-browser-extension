@@ -63,11 +63,29 @@
     }
   };
 
+  // Check if current site is blocked
+  const isBlocked = () => {
+    return new Promise((resolve) => {
+      const currentHostname = window.location.hostname.toLowerCase();
+      chrome.storage.local.get(['checkmate-blocklist'], (result) => {
+        const blocklist = result['checkmate-blocklist'] || [];
+        resolve(blocklist.includes(currentHostname));
+      });
+    });
+  };
+
   // Check if current site is whitelisted
   const isWhitelisted = async () => {
     const currentHostname = window.location.hostname.toLowerCase();
     const whitelist = await getWhitelist();
     return whitelist.some(site => currentHostname === site || currentHostname.endsWith('.' + site));
+  };
+
+  // Check if button should be shown (whitelisted AND not blocked)
+  const shouldShowButton = async () => {
+    const whitelisted = await isWhitelisted();
+    const blocked = await isBlocked();
+    return whitelisted && !blocked;
   };
 
   // Create and show a notification
@@ -102,14 +120,14 @@
     }
   });
 
-  // Initialize and check if whitelisted
-  (async () => {
-    // Don't run on localhost or in iframes, and only run on whitelisted sites
+  // Wait for DOM to be ready before initializing
+  const initializeButton = async () => {
+    // Don't run on localhost or in iframes, and only run on allowed sites
     if (
       window.location.hostname === "localhost" || 
       window.location.hostname === "127.0.0.1" ||
       window.self !== window.top ||
-      !(await isWhitelisted())
+      !(await shouldShowButton())
     ) {
       return;
     }
@@ -167,13 +185,25 @@
     });
 
     document.body.appendChild(btn);
-  })();
+  };
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeButton);
+  } else {
+    // DOM is already ready
+    initializeButton();
+  }
 
   // Expose whitelist management to global scope for debugging and manual management
   window.checkmate = {
     addToWhitelist,
     removeFromWhitelist,
     getWhitelist,
-    isWhitelisted
+    isWhitelisted,
+    isBlocked,
+    shouldShowButton
   };
+
+
 })();
