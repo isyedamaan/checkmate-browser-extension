@@ -181,7 +181,7 @@
 
     btn.addEventListener("click", () => {
       const url = window.location.href;
-      window.open(`http://localhost:3000/?url=${encodeURIComponent(url)}`, "_blank");
+      window.open(`http://localhost:3000/?link=${encodeURIComponent(url)}`, "_blank");
     });
 
     document.body.appendChild(btn);
