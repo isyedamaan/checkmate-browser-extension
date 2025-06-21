@@ -3,58 +3,71 @@
     return;
   }
 
-  // Default blocklist of sites where the button should not appear
-  const defaultBlocklist = [
-    "google.com",
-    "facebook.com",
-    "instagram.com",
-    "lazada.com.my",
-    "shopee.com.my",
-    "mudah.my",
-    "waze.com",
-    "grab.com",
-    "gmail.com",
-    "youtube.com"
+  // Default whitelist of sites where the button should appear
+  const defaultWhitelist = [
+    // Malaysian news sites
+    "thestar.com.my",
+    "nst.com.my",
+    "malaymail.com",
+    "freemalaysiatoday.com",
+    "malaysianow.com",
+    "malaysiakini.com",
+    "astroawani.com",
+    "bernama.com",
+    "theedgemarkets.com",
+    "themalaysianinsight.com",
+    // International news sites
+    "bbc.com",
+    "cnn.com",
+    "reuters.com",
+    "ap.org",
+    "theguardian.com",
+    "aljazeera.com",
+    "channelnewsasia.com",
+    "straitstimes.com",
+    // General article platforms
+    "medium.com",
+    "substack.com"
   ];
 
-  // Get or initialize the blocklist from chrome.storage
-  const getBlocklist = () => {
+  // Get or initialize the whitelist from chrome.storage
+  const getWhitelist = () => {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['checkmate-blocklist'], (result) => {
-        if (!result['checkmate-blocklist']) {
-          chrome.storage.local.set({ 'checkmate-blocklist': defaultBlocklist });
-          resolve(defaultBlocklist);
+      chrome.storage.local.get(['checkmate-whitelist'], (result) => {
+        if (!result['checkmate-whitelist']) {
+          chrome.storage.local.set({ 'checkmate-whitelist': defaultWhitelist });
+          resolve(defaultWhitelist);
         } else {
-          resolve(result['checkmate-blocklist']);
+          resolve(result['checkmate-whitelist']);
         }
       });
     });
   };
 
-  // Add a site to the blocklist
-  const addToBlocklist = async (site) => {
-    const blocklist = await getBlocklist();
-    if (!blocklist.includes(site)) {
-      blocklist.push(site);
-      await chrome.storage.local.set({ 'checkmate-blocklist': blocklist });
+  // Add a site to the whitelist
+  const addToWhitelist = async (site) => {
+    const whitelist = await getWhitelist();
+    if (!whitelist.includes(site)) {
+      whitelist.push(site);
+      await chrome.storage.local.set({ 'checkmate-whitelist': whitelist });
     }
   };
 
-  // Remove a site from the blocklist
-  const removeFromBlocklist = async (site) => {
-    const blocklist = await getBlocklist();
-    const index = blocklist.indexOf(site);
+  // Remove a site from the whitelist
+  const removeFromWhitelist = async (site) => {
+    const whitelist = await getWhitelist();
+    const index = whitelist.indexOf(site);
     if (index > -1) {
-      blocklist.splice(index, 1);
-      await chrome.storage.local.set({ 'checkmate-blocklist': blocklist });
+      whitelist.splice(index, 1);
+      await chrome.storage.local.set({ 'checkmate-whitelist': whitelist });
     }
   };
 
-  // Check if current site is blocked
-  const isBlocked = async () => {
+  // Check if current site is whitelisted
+  const isWhitelisted = async () => {
     const currentHostname = window.location.hostname.toLowerCase();
-    const blocklist = await getBlocklist();
-    return blocklist.some(site => currentHostname === site || currentHostname.endsWith('.' + site));
+    const whitelist = await getWhitelist();
+    return whitelist.some(site => currentHostname === site || currentHostname.endsWith('.' + site));
   };
 
   // Create and show a notification
@@ -89,14 +102,14 @@
     }
   });
 
-  // Initialize and check if blocked
+  // Initialize and check if whitelisted
   (async () => {
-    // Don't run on localhost or in iframes or blocked sites
+    // Don't run on localhost or in iframes, and only run on whitelisted sites
     if (
       window.location.hostname === "localhost" || 
       window.location.hostname === "127.0.0.1" ||
       window.self !== window.top ||
-      await isBlocked()
+      !(await isWhitelisted())
     ) {
       return;
     }
@@ -156,11 +169,11 @@
     document.body.appendChild(btn);
   })();
 
-  // Expose blocklist management to global scope for debugging and manual management
+  // Expose whitelist management to global scope for debugging and manual management
   window.checkmate = {
-    addToBlocklist,
-    removeFromBlocklist,
-    getBlocklist,
-    isBlocked
+    addToWhitelist,
+    removeFromWhitelist,
+    getWhitelist,
+    isWhitelisted
   };
-})(); 
+})();
