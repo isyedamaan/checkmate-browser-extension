@@ -16,6 +16,7 @@
     "bernama.com",
     "theedgemarkets.com",
     "themalaysianinsight.com",
+    "x.com",
     // International news sites
     "bbc.com",
     "cnn.com",
@@ -27,18 +28,18 @@
     "straitstimes.com",
     // General article platforms
     "medium.com",
-    "substack.com"
+    "substack.com",
   ];
 
   // Get or initialize the whitelist from chrome.storage
   const getWhitelist = () => {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['checkmate-whitelist'], (result) => {
-        if (!result['checkmate-whitelist']) {
-          chrome.storage.local.set({ 'checkmate-whitelist': defaultWhitelist });
+      chrome.storage.local.get(["checkmate-whitelist"], (result) => {
+        if (!result["checkmate-whitelist"]) {
+          chrome.storage.local.set({ "checkmate-whitelist": defaultWhitelist });
           resolve(defaultWhitelist);
         } else {
-          resolve(result['checkmate-whitelist']);
+          resolve(result["checkmate-whitelist"]);
         }
       });
     });
@@ -49,7 +50,7 @@
     const whitelist = await getWhitelist();
     if (!whitelist.includes(site)) {
       whitelist.push(site);
-      await chrome.storage.local.set({ 'checkmate-whitelist': whitelist });
+      await chrome.storage.local.set({ "checkmate-whitelist": whitelist });
     }
   };
 
@@ -59,7 +60,7 @@
     const index = whitelist.indexOf(site);
     if (index > -1) {
       whitelist.splice(index, 1);
-      await chrome.storage.local.set({ 'checkmate-whitelist': whitelist });
+      await chrome.storage.local.set({ "checkmate-whitelist": whitelist });
     }
   };
 
@@ -67,8 +68,8 @@
   const isBlocked = () => {
     return new Promise((resolve) => {
       const currentHostname = window.location.hostname.toLowerCase();
-      chrome.storage.local.get(['checkmate-blocklist'], (result) => {
-        const blocklist = result['checkmate-blocklist'] || [];
+      chrome.storage.local.get(["checkmate-blocklist"], (result) => {
+        const blocklist = result["checkmate-blocklist"] || [];
         resolve(blocklist.includes(currentHostname));
       });
     });
@@ -78,7 +79,9 @@
   const isWhitelisted = async () => {
     const currentHostname = window.location.hostname.toLowerCase();
     const whitelist = await getWhitelist();
-    return whitelist.some(site => currentHostname === site || currentHostname.endsWith('.' + site));
+    return whitelist.some(
+      (site) => currentHostname === site || currentHostname.endsWith("." + site)
+    );
   };
 
   // Check if button should be shown (whitelisted AND not blocked)
@@ -90,7 +93,7 @@
 
   // Create and show a notification
   const showNotification = (message) => {
-    const notification = document.createElement('div');
+    const notification = document.createElement("div");
     notification.style.cssText = `
       position: fixed;
       top: 20px;
@@ -108,14 +111,14 @@
     document.body.appendChild(notification);
 
     setTimeout(() => {
-      notification.style.opacity = '0';
+      notification.style.opacity = "0";
       setTimeout(() => notification.remove(), 300);
     }, 3000);
   };
 
   // Listen for messages from the background script
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'showNotification') {
+    if (request.action === "showNotification") {
       showNotification(request.message);
     }
   });
@@ -124,7 +127,7 @@
   const initializeButton = async () => {
     // Don't run on localhost or in iframes, and only run on allowed sites
     if (
-      window.location.hostname === "localhost" || 
+      window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1" ||
       window.self !== window.top ||
       !(await shouldShowButton())
@@ -157,14 +160,14 @@
     btn.setAttribute("aria-label", "Analyze with CheckMate");
     btn.setAttribute("title", "Analyze with CheckMate");
 
-    btn.addEventListener('mouseenter', () => {
-      btn.style.transform = 'translateY(-50%) scale(1.1)';
-      btn.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.3)';
+    btn.addEventListener("mouseenter", () => {
+      btn.style.transform = "translateY(-50%) scale(1.1)";
+      btn.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
     });
 
-    btn.addEventListener('mouseleave', () => {
-      btn.style.transform = 'translateY(-50%) scale(1)';
-      btn.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+    btn.addEventListener("mouseleave", () => {
+      btn.style.transform = "translateY(-50%) scale(1)";
+      btn.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
     });
 
     const span = document.createElement("span");
@@ -181,15 +184,18 @@
 
     btn.addEventListener("click", () => {
       const url = window.location.href;
-      window.open(`http://localhost:3000/?link=${encodeURIComponent(url)}`, "_blank");
+      window.open(
+        `http://localhost:3000/?link=${encodeURIComponent(url)}`,
+        "_blank"
+      );
     });
 
     document.body.appendChild(btn);
   };
 
   // Initialize when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeButton);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeButton);
   } else {
     // DOM is already ready
     initializeButton();
@@ -202,8 +208,6 @@
     getWhitelist,
     isWhitelisted,
     isBlocked,
-    shouldShowButton
+    shouldShowButton,
   };
-
-
 })();
